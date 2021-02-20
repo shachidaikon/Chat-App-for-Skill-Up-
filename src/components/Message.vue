@@ -8,7 +8,12 @@
       <div class="card" :class="{ card__isMine: isMine }">
         <span class="content">{{ message }}</span>
       </div>
-      <span class="date" :class="{ date__isMine: isMine }">{{ date }}</span>
+      <span class="date" :class="{ date__isMine: isMine }"
+        >{{ date }}
+        <span v-if="isMine" @click="$emit('delete-post')" class="delete"
+          >削除</span
+        ></span
+      >
     </div>
   </div>
 </template>
@@ -83,5 +88,12 @@ export default {
   &__isMine {
     text-align: right;
   }
+}
+
+.delete {
+  cursor: pointer;
+  margin-left: 8px;
+  color: $color-font-link;
+  text-decoration: underline;
 }
 </style>

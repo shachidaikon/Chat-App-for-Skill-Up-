@@ -32,29 +32,28 @@ const postMessage = (user, message) => {
     })
 }
 
-const getPost = callback => {
-  //すでにデータベースにあるメッセージをロード
+const deletePost = id => {
   postRef
-    .orderBy('timestamp', 'asc')
-    .get()
-    .then(querySnapshot => {
-      querySnapshot.forEach(doc => {
-        callback(shapeData(doc))
-      })
+    .doc(id)
+    .delete()
+    .then(() => {
+      console.log('成功')
+    })
+    .catch(error => {
+      console.log('失敗', error)
     })
 }
 
-const setPostListner = callback => {
-  postRef
-    .orderBy('timestamp', 'asc')
-    .startAt(new Date(Date.now()))
-    .onSnapshot(querySnapshot => {
-      querySnapshot.docChanges().forEach(change => {
-        if (change.type == 'added') {
-          callback(shapeData(change.doc))
-        }
-      })
+const setPostListner = (added, removed) => {
+  postRef.orderBy('timestamp', 'asc').onSnapshot(querySnapshot => {
+    querySnapshot.docChanges().forEach(change => {
+      if (change.type == 'added') {
+        added(shapeData(change.doc))
+      } else if (change.type == 'removed') {
+        removed(change.doc.id)
+      }
     })
+  })
 }
 
-export { postMessage, getPost, setPostListner }
+export { postMessage, setPostListner, deletePost }

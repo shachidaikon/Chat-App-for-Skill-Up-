@@ -4,15 +4,19 @@
       <h1>Chat for Skillup</h1>
     </header>
     <div class="message-wrapper" ref="message-wrapper">
-      <Message
-        v-for="message in messages"
-        :key="message.id"
-        :message="message.message"
-        :icon="message.icon"
-        :timestamp="message.timestamp"
-        :displayName="message.displayName"
-        :isMine="message.isMine"
-      />
+      <transition-group name="message-transition">
+        <Message
+          v-for="message in messages"
+          :key="message.id"
+          :message="message.message"
+          :icon="message.icon"
+          :timestamp="message.timestamp"
+          :displayName="message.displayName"
+          :isMine="message.isMine"
+          @delete-post="deletePost(message.id)"
+          :class="{ transparent: !message.isAlive }"
+        />
+      </transition-group>
     </div>
     <div class="message-form__background">
       <div class="message-form__wrapper">
@@ -21,7 +25,9 @@
           placeholder="メッセージを入力"
           class="message-form__textarea"
         ></textarea>
-        <button @click="submit" class="message-form__submit">送信する</button>
+        <button @click="submitPost" class="message-form__submit">
+          送信する
+        </button>
       </div>
     </div>
   </div>
@@ -29,7 +35,11 @@
 
 <script>
 import Message from '../components/Message.vue'
-import { postMessage, getPost, setPostListner } from '../firebase/api.js'
+import {
+  postMessage,
+  setPostListner,
+  deletePost as dp,
+} from '../firebase/api.js'
 
 export default {
   name: 'Chat',
@@ -40,7 +50,7 @@ export default {
     user: Object,
   },
   methods: {
-    submit: function() {
+    submitPost: function() {
       postMessage(this.user, this.textarea)
       this.textarea = ''
     },
@@ -48,14 +58,25 @@ export default {
       if (newPost.uid === this.user.uid) newPost.isMine = true
       else newPost.isMine = false
 
+      newPost.isAlive = true
       this.messages.push(newPost)
       this.$nextTick(() => {
         this.$refs['message-wrapper'].scrollTo(0, 10000)
       })
     },
+    deletePost: function(id) {
+      dp(id)
+    },
+    deleteMessage: function(id) {
+      const idx = this.messages.findIndex(message => message.id === id)
+      this.messages[idx].isAlive = false
+      this.$nextTick(() => {
+        this.messages.splice(idx, 1)
+      })
+    },
   },
   mounted: function() {
-    getPost(this.addMessage), setPostListner(this.addMessage)
+    setPostListner(this.addMessage, this.deleteMessage)
   },
   data: function() {
     return {
@@ -67,6 +88,24 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.message-transition {
+  &-leave,
+  &-leave-to {
+    opacity: 0;
+  }
+  &-move {
+    transition: all 500ms;
+  }
+  &-leave-active {
+    position: absolute;
+    transition-duration: 0ms;
+  }
+}
+
+.transparent {
+  opacity: 0;
+}
+
 .page-wrapper {
   background: $color-bg-sub;
   color: $color-font;

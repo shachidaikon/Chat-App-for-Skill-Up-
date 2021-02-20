@@ -59,6 +59,8 @@ export default {
   margin: 0 16px;
   font-size: 14px;
   display: block;
+  text-align: left;
+
   &__isMine {
     text-align: right;
   }
@@ -76,6 +78,8 @@ export default {
   margin: 0 16px;
   font-size: 14px;
   display: block;
+  text-align: left;
+
   &__isMine {
     text-align: right;
   }
